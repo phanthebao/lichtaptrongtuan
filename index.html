@@ -176,6 +176,43 @@
   @media (max-width:1200px){
     .wrap { transform: scale(.75); }
   }
+  /* ===================== MOBILE OPTIMIZATION ===================== */
+  @media (max-width: 992px) {
+    html, body {
+      background: #000;
+      overflow-x: hidden;
+    }
+    .wrap {
+      width: var(--app-width);
+      height: var(--app-height);
+      transform: scale(calc(100vw / var(--app-width)));
+      transform-origin: top center;
+      margin: 0 auto;
+      box-shadow: none;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .wrap {
+      transform: scale(calc(100vw / var(--app-width)));
+      transform-origin: top center;
+      margin: 0;
+    }
+    .editor {
+      width: 90vw !important;
+      left: 50% !important;
+      transform: translateX(-50%);
+      font-size: 14px;
+    }
+    .editor input, .editor select {
+      font-size: 14px;
+    }
+    .btn {
+      font-size: 13px;
+      padding: 5px 8px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -189,7 +226,7 @@
     font-size: 20px;   /* chỉnh to nhỏ */
     font-weight: 600;  /* độ đậm */
     color: #fff;       /* màu chữ */
-    font-family: Montserrat;
+    font-family: Montserrat-BoldItalic.ttf;
     outline: none;
   "
 >
