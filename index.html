@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>XENDI</title>
+<style>
+body{background:#111;color:#fff;text-align:center;font-family:Arial;padding-top:80px;}
+.btn{padding:15px 30px;margin:10px;font-size:18px;font-weight:bold;border:none;border-radius:10px;background:#ff7a00;cursor:pointer;}
+.summary{margin-top:40px;line-height:1.6;}
+.conflict{margin-top:20px;color:#ff4d4d;font-weight:bold;}
+</style>
+</head>
+
+<body>
+
+<button class="btn" onclick="clearSchedule()">XÓA TOÀN BỘ LỊCH</button>
+
+<h1>CHỌN TRUNG TÂM</h1>
+
+<button class="btn" onclick="go('bauca')">XENDI BÀU CÁ</button>
+<button class="btn" onclick="go('daugiay')">XENDI DẦU GIÂY</button>
+
+<div id="summary" class="summary"></div>
+<div id="conflictBox" class="conflict"></div>
+
+<script>
+
+/* ===== CONFIG ===== */
+const DAY_ORDER = ["thứ 2","thứ 3","thứ 4","thứ 5","thứ 6"];
+
+const TIME_ORDER = [
+  "lớp 5h",
+  "lớp 6h",
+  "lớp 8h",
+  "lớp 17h30",
+  "lớp 18h45"
+];
+
+/* ===== NAV ===== */
+function go(p){ location.href = p + ".html"; }
+
+/* ===== PARSE KEY ===== */
+function parseKey(key){
+  let [center,r,c] = key.split("_");
+  return {
+    center,
+    r: r.replace("r",""),
+    c: c.replace("c","")
+  }
+}
+
+/* ===== CLEAR ===== */
+function clearSchedule(){
+  if(!confirm("Xóa toàn bộ lịch tập?")) return;
+
+  Object.keys(localStorage).forEach(k=>{
+    if(k.includes("_r")) localStorage.removeItem(k);
+  });
+
+  loadSummary();
+}
+
+/* ===== CHECK TRÙNG ===== */
+function checkConflicts(){
+  let map = {};
+  let conflicts = [];
+
+  for(let i=0;i<localStorage.length;i++){
+    let key = localStorage.key(i);
+    if(!key.includes("_r")) continue;
+
+    let data = JSON.parse(localStorage.getItem(key));
+    let {center, r, c} = parseKey(key);
+
+    let uniqueKey = `${data.coach}_${c}_${r}`;
+
+    if(map[uniqueKey]){
+      conflicts.push({
+        coach: data.coach,
+        day: c,
+        time: r,
+        centers: [map[uniqueKey], center]
+      });
+    }else{
+      map[uniqueKey] = center;
+    }
+  }
+
+  return conflicts;
+}
+
+/* ===== RENDER ===== */
+function render(obj){
+
+  let sortedDays = Object.keys(obj).sort((a,b)=>{
+    return DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b);
+  });
+
+  return sortedDays.map(day=>{
+    let sortedTime = obj[day].sort((a,b)=>{
+      let tA = TIME_ORDER.findIndex(t=>a.includes(t));
+      let tB = TIME_ORDER.findIndex(t=>b.includes(t));
+      return tA - tB;
+    });
+
+    return `${day}: ${sortedTime.join(", ")}`;
+  }).join("<br>");
+}
+
+/* ===== LOAD SUMMARY ===== */
+function loadSummary(){
+  let thanh={}, hao={};
+
+  for(let i=0;i<localStorage.length;i++){
+    let key = localStorage.key(i);
+    if(!key.includes("_r")) continue;
+
+    let data = JSON.parse(localStorage.getItem(key));
+    let p = parseKey(key);
+
+    let txt = `${p.r} - ${p.center.toUpperCase()}`;
+
+    let target = data.coach==="Ms. Thanh" ? thanh : hao;
+    if(!target[p.c]) target[p.c]=[];
+    target[p.c].push(txt);
+  }
+
+  document.getElementById("summary").innerHTML =
+    `<b>Ms Thanh:</b><br>${render(thanh)}<br><br>
+     <b>Ms Hảo:</b><br>${render(hao)}`;
+
+  /* 🔥 HIỂN THỊ TRÙNG */
+  let conflicts = checkConflicts();
+
+  if(conflicts.length > 0){
+    document.getElementById("conflictBox").innerHTML =
+      "⚠️ TRÙNG LỊCH:<br>" +
+      conflicts.map(c =>
+        `${c.coach}: ${c.day} - ${c.time} (${c.centers.join(" & ")})`
+      ).join("<br>");
+  }else{
+    document.getElementById("conflictBox").innerHTML = "";
+  }
+}
+
+/* ===== INIT ===== */
+loadSummary();
+
+</script>
+
+</body>
+</html>
